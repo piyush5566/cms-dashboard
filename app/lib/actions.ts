@@ -27,9 +27,9 @@ export async function createInvoice(formData: FormData) {
     await sql`
     INSERT INTO invoices (customer_id, amount, status, date) VALUES (${customerId}, ${amountInCents}, ${status}, ${date})`;
   } catch (error) {
-    return {
+    console.error({
       message: `${error} Database Error: Failed to Create Invoice.`,
-    };
+    });
   }
 
   revalidatePath("/dashboard/invoices");
