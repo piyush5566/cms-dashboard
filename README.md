@@ -16,7 +16,7 @@ To install and set up the project, follow these steps:
    ```bash
    git clone https://github.com/piyush5566/cms-dashboard.git
    cd cms-dashboard
-  ```
+   ```
 2. Install dependencies:
   ```bash
   pnpm install
