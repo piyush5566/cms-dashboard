@@ -16,34 +16,37 @@ export default function Page() {
           <p
             className={`${lusitana.className}text-xl text-gray-800 md:text-3xl md:leading-normal`}
           >
-            <strong>Welcome to Acme.</strong> This is the example for the{" "}
-            <a href="https://nextjs.org/learn/" className="text-blue-500">
-              Next.js Learn Course
-            </a>
-            , brought to you by Vercel.
+            <strong>Welcome to SalesPro Dashboard.</strong> A comprehensive sales analytics and management platform designed to help you track revenue, manage invoices, and monitor customer relationships.
           </p>
-          <Link
-            href="/login"
-            className="flex items-center gap-5 self-start rounded-lg bg-blue-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-400 md:text-base"
-          >
-            <span>Log in</span> <ArrowRightIcon className="w-5 md:w-6" />
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-5 self-start rounded-lg bg-blue-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-400 md:text-base"
+            >
+              <span>Go to Dashboard</span> <ArrowRightIcon className="w-5 md:w-6" />
+            </Link>
+            <Link
+              href="/login"
+              className="flex items-center gap-5 self-start rounded-lg bg-gray-100 px-6 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200 md:text-base"
+            >
+              <span>Log in</span>
+            </Link>
+          </div>
         </div>
         <div className="flex items-center justify-center p-6 md:w-3/5 md:px-28 md:py-12">
-          {/* Add Hero Images Here */}
           <Image
             src="/hero-desktop.png"
             width={1000}
             height={760}
             className="hidden md:block"
-            alt="Screenshots of the dashboard project showing desktop version"
+            alt="Screenshots of the dashboard showing various analytics and reports"
           />
           <Image
             src="/hero-mobile.png"
             width={560}
             height={620}
             className="block md:hidden"
-            alt="Screenshots of the dashboard project showing mobile version"
+            alt="Mobile view of the dashboard showing key metrics"
           />
         </div>
       </div>
