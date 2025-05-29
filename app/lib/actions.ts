@@ -1,10 +1,10 @@
 "use server";
 
 import { z } from "zod";
-import { sql } from "@vercel/postgres";
+import prisma from "@/app/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 
 const FormSchema = z.object({
@@ -48,10 +48,16 @@ export async function createInvoice(prevState: State, formData: FormData) {
 
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
-  const date = new Date().toISOString().split("T")[0];
+  const date = new Date();
   try {
-    await sql`
-    INSERT INTO invoices (customer_id, amount, status, date) VALUES (${customerId}, ${amountInCents}, ${status}, ${date})`;
+    await prisma.invoices.create({
+      data: {
+        customer_id: customerId,
+        amount: amountInCents,
+        status,
+        date,
+      },
+    });
   } catch (error) {
     return {
       message: `${error} Database Error: Failed to Create Invoice.`,
@@ -60,14 +66,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
 
   revalidatePath("/dashboard/invoices");
   redirect("/dashboard/invoices");
-
-  //   const rawFormData = {
-  //     customerId: formData.get("customerId"),
-  //     amount: formData.get("amount"),
-  //     status: formData.get("status"),
-  //   };
-  //   console.log(rawFormData);
-  //   console.log(Object.fromEntries(formData.entries()));
 }
 
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
@@ -91,11 +89,14 @@ export async function updateInvoice(
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
   try {
-    await sql`
-    UPDATE invoices
-    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-    WHERE id= ${id}
-    `;
+    await prisma.invoices.update({
+      where: { id },
+      data: {
+        customer_id: customerId,
+        amount: amountInCents,
+        status,
+      },
+    });
   } catch (error) {
     return {
       message: `${error} Database Error: Failed to Update Invoice.`,
@@ -108,7 +109,7 @@ export async function updateInvoice(
 
 export async function deleteInvoice(id: string) {
   try {
-    await sql`DELETE FROM invoices WHERE id = ${id}`;
+    await prisma.invoices.delete({ where: { id } });
     revalidatePath("/dashboard/invoices");
     console.log({ message: "Deleted Invoice." });
   } catch (error) {
@@ -135,4 +136,8 @@ export async function authenticate(
     }
     throw error;
   }
+}
+
+export async function handleSignOut() {
+  await signOut();
 }

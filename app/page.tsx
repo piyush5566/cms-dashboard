@@ -6,48 +6,79 @@ import Image from "next/image";
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col p-6">
-      <div className="flex h-20 shrink-0 items-end rounded-lg bg-blue-500 p-4 md:h-52">
-        <AcmeLogo />
-      </div>
-      <div className="mt-4 flex grow flex-col gap-4 md:flex-row">
-        <div className="flex flex-col justify-center gap-6 rounded-lg bg-gray-50 px-6 py-10 md:w-2/5 md:px-20">
-          <div className="relative w-0 h-0 border-l-[15px] border-r-[15px] border-b-[26px] border-l-transparent border-r-transparent border-b-black"></div>
-          <p
-            className={`${lusitana.className} text-xl text-gray-800 md:text-3xl md:leading-normal`}
-          >
-            <strong>Welcome to SalesPro Dashboard.</strong> A comprehensive sales analytics and management platform designed to help you track revenue, manage invoices, and monitor customer relationships.
-          </p>
-          <div className="flex gap-4">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-5 self-start rounded-lg bg-blue-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-400 md:text-base"
-            >
-              <span>Go to Dashboard</span> <ArrowRightIcon className="w-5 md:w-6" />
-            </Link>
-            <Link
-              href="/login"
-              className="flex items-center gap-5 self-start rounded-lg bg-gray-100 px-6 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200 md:text-base"
-            >
-              <span>Log in</span>
-            </Link>
-          </div>
+    <main className="flex min-h-screen flex-col">
+      {/* Hero Section */}
+      <div className="relative h-screen">
+        {/* Background with gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800">
+          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
         </div>
-        <div className="flex items-center justify-center p-6 md:w-3/5 md:px-28 md:py-12">
-          <Image
-            src="/hero-desktop.png"
-            width={1000}
-            height={760}
-            className="hidden md:block"
-            alt="Screenshots of the dashboard showing various analytics and reports"
-          />
-          <Image
-            src="/hero-mobile.png"
-            width={560}
-            height={620}
-            className="block md:hidden"
-            alt="Mobile view of the dashboard showing key metrics"
-          />
+
+        {/* Content */}
+        <div className="relative flex h-full flex-col items-center justify-center px-6 md:px-24">
+          <div className="mb-8">
+            <AcmeLogo />
+          </div>
+
+          <div className="max-w-4xl text-center">
+            <h1
+              className={`${lusitana.className} mb-6 text-4xl font-bold text-white md:text-6xl`}
+            >
+              Welcome to SalesPro Dashboard
+            </h1>
+            <p className="mb-8 text-lg text-blue-100 md:text-xl">
+              A comprehensive sales analytics and management platform designed
+              to help you track revenue, manage invoices, and monitor customer
+              relationships.
+            </p>
+
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-medium text-blue-600 transition-all duration-200 hover:bg-blue-50 hover:scale-105 active:scale-95 active:bg-blue-100 md:text-base"
+              >
+                <span>Go to Dashboard</span>
+                <ArrowRightIcon className="w-5" />
+              </Link>
+              <Link
+                href="/login"
+                className="flex items-center gap-2 rounded-full border border-white px-8 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-white/10 hover:scale-105 active:scale-95 active:bg-white/20 md:text-base"
+              >
+                <span>Log in</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-xl bg-white/10 p-6 backdrop-blur-sm">
+              <h3 className="mb-2 text-xl font-semibold text-white">
+                Analytics
+              </h3>
+              <p className="text-blue-100">
+                Track your sales performance with real-time analytics and
+                insights.
+              </p>
+            </div>
+            <div className="rounded-xl bg-white/10 p-6 backdrop-blur-sm">
+              <h3 className="mb-2 text-xl font-semibold text-white">
+                Invoicing
+              </h3>
+              <p className="text-blue-100">
+                Create and manage invoices with our streamlined invoicing
+                system.
+              </p>
+            </div>
+            <div className="rounded-xl bg-white/10 p-6 backdrop-blur-sm">
+              <h3 className="mb-2 text-xl font-semibold text-white">
+                Customer Management
+              </h3>
+              <p className="text-blue-100">
+                Build stronger relationships with comprehensive customer
+                tracking.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </main>

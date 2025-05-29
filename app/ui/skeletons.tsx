@@ -1,6 +1,6 @@
 // Loading animation
 const shimmer =
-  'before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent';
+  "before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent";
 
 export function CardSkeleton() {
   return (
@@ -31,13 +31,32 @@ export function CardsSkeleton() {
 
 export function RevenueChartSkeleton() {
   return (
-    <div className={`${shimmer} relative w-full overflow-hidden md:col-span-4`}>
-      <div className="mb-4 h-8 w-36 rounded-md bg-gray-100" />
-      <div className="rounded-xl bg-gray-100 p-4">
-        <div className="sm:grid-cols-13 mt-0 grid h-[410px] grid-cols-12 items-end gap-2 rounded-md bg-white p-4 md:gap-4" />
-        <div className="flex items-center pb-2 pt-6">
-          <div className="h-5 w-5 rounded-full bg-gray-200" />
-          <div className="ml-2 h-4 w-20 rounded-md bg-gray-200" />
+    <div className="w-full md:col-span-4">
+      <div className="mb-4 h-8 w-36 animate-pulse rounded bg-gray-200" />
+      <div className="rounded-xl bg-gray-50 p-4">
+        <div className="relative sm:grid-cols-13 mt-0 grid h-[350px] grid-cols-12 items-end gap-2 rounded-md bg-white p-4 md:gap-4">
+          {/* Y-axis vertical bar */}
+          <div className="relative flex h-full w-6 items-end justify-center">
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-full w-3 rounded bg-gray-200" />
+          </div>
+          {/* Bars */}
+          {Array.from({ length: 11 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 w-full">
+              <div
+                className="w-full animate-pulse rounded-md bg-gray-200"
+                style={{
+                  height: `${Math.random() * 200 + 50}px`,
+                }}
+              />
+              <div className="h-4 w-12 animate-pulse rounded bg-gray-200" />
+            </div>
+          ))}
+          {/* X-axis horizontal bar */}
+          <div className="absolute left-0 bottom-0 h-3 w-full flex items-center">
+            <div className="h-3 w-3 rounded bg-gray-200" />
+            <div className="h-3 flex-1 bg-gray-200" />
+            <div className="h-3 w-3 rounded bg-gray-200" />
+          </div>
         </div>
       </div>
     </div>
@@ -211,6 +230,105 @@ export function InvoicesTableSkeleton() {
               <TableRowSkeleton />
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function CustomersCardsSkeleton() {
+  return (
+    <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {[...Array(4)].map((_, i) => (
+        <div
+          key={i}
+          className={
+            shimmer +
+            " relative overflow-hidden rounded-xl bg-white p-4 shadow-sm flex flex-col items-start"
+          }
+        >
+          <div className="mb-2 h-5 w-24 rounded bg-gray-200" />
+          <div className="h-8 w-20 rounded bg-gray-200" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function CustomersTableSkeleton() {
+  return (
+    <div className="mt-6 flow-root">
+      <div className="inline-block min-w-full align-middle">
+        <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+          <div className="hidden md:block">
+            <div className="relative h-[calc(100vh-22rem)]">
+              <div className="absolute inset-0 overflow-auto">
+                <table className="min-w-full text-gray-900">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-gray-50">
+                      <th className="px-4 py-5 font-medium sm:pl-6 w-[25%] bg-gray-50">
+                        Customer
+                      </th>
+                      <th className="px-3 py-5 font-medium w-[20%] bg-gray-50">
+                        Email
+                      </th>
+                      <th className="px-3 py-5 font-medium w-[15%] bg-gray-50">
+                        Company
+                      </th>
+                      <th className="px-3 py-5 font-medium w-[10%] bg-gray-50">
+                        Status
+                      </th>
+                      <th className="px-3 py-5 font-medium w-[10%] bg-gray-50">
+                        Orders
+                      </th>
+                      <th className="px-3 py-5 font-medium w-[10%] bg-gray-50">
+                        Total Spent
+                      </th>
+                      <th className="px-3 py-5 font-medium w-[10%] bg-gray-50">
+                        Last Order
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    {[...Array(6)].map((_, i) => (
+                      <tr
+                        key={i}
+                        className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
+                      >
+                        <td className="whitespace-nowrap py-3 pl-6 pr-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-7 w-7 rounded-full bg-gray-200" />
+                            <div className="h-5 w-32 rounded bg-gray-200" />
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3">
+                          <div className="h-5 w-28 rounded bg-gray-200" />
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3">
+                          <div className="h-5 w-20 rounded bg-gray-200" />
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3">
+                          <div className="h-5 w-16 rounded bg-gray-200" />
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3">
+                          <div className="h-5 w-12 rounded bg-gray-200" />
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3">
+                          <div className="h-5 w-20 rounded bg-gray-200" />
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3">
+                          <div className="h-5 w-20 rounded bg-gray-200" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="flex justify-center border-t border-gray-200 bg-white px-4 py-3">
+              <div className="h-10 w-40 rounded bg-gray-200" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -37,3 +37,5 @@ next-env.d.ts
 
 # Intellij IDE
 .idea/
+
+/generated/prisma

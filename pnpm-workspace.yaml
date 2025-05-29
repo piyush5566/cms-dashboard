@@ -1,2 +1,4 @@
-onlyBuiltDependencies:
-  - bcrypt
+packages:
+  - '.' # Defines the root directory as a package in the workspace
+# The 'onlyBuiltDependencies' field is for local workspace packages.
+# 'bcrypt' is an external dependency and will be handled by the standard install process.

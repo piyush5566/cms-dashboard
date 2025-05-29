@@ -1,4 +1,4 @@
-# CMS Dashboard
+# Customer Management Sales Dashboard
 
 ## Description
 A comprehensive CMS dashboard built with TypeScript. This project aims to provide a robust and user-friendly interface for managing content.
