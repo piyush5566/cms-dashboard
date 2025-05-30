@@ -13,8 +13,6 @@ async function listInvoices() {
   }));
 }
 
-export { listInvoices };
-
 export async function GET() {
   // return Response.json({
   //   message:
