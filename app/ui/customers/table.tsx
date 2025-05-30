@@ -9,11 +9,9 @@ import { useState, useEffect } from "react";
 import Pagination from "./pagination";
 
 export default function CustomersTable({
-  customers,
   searchQuery,
   currentPage,
 }: {
-  customers: Customer[];
   searchQuery: string;
   currentPage: number;
 }) {
@@ -23,46 +21,142 @@ export default function CustomersTable({
     "all" | "active" | "inactive"
   >("all");
   const [isLoading, setIsLoading] = useState(true);
-  const itemsPerPage = 6;
+  const [totalPages, setTotalPages] = useState(1);
+  const [customers, setCustomers] = useState<Customer[]>([]);
 
-  // Filter customers based on search term and status
-  const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch = Object.values(customer).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    const matchesStatus =
-      statusFilter === "all" || customer.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  // Sort customers
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
-
-    if (typeof aValue === "string" && typeof bValue === "string") {
-      return sortDirection === "asc"
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
+  // Fetch customers with pagination
+  const fetchCustomers = async (page: number) => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        query: searchQuery,
+        page: page.toString(),
+        status: statusFilter,
+        sort: sortField,
+        direction: sortDirection,
+      });
+      const response = await fetch(`/api/customers?${params.toString()}`);
+      if (!response.ok) throw new Error("Failed to fetch customers");
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      return { customers: [], totalPages: 1 };
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    if (typeof aValue === "number" && typeof bValue === "number") {
-      return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+  // Handle page change
+  const handlePageChange = async (page: number) => {
+    const data = await fetchCustomers(page);
+    if (data.customers) {
+      setCustomers(data.customers);
+      setTotalPages(data.totalPages);
+      window.history.pushState(
+        {},
+        "",
+        `/dashboard/customers?page=${page}&query=${searchQuery}&status=${statusFilter}&sort=${sortField}&direction=${sortDirection}`
+      );
     }
+  };
 
-    return 0;
-  });
+  // Handle sort change
+  const handleSortChange = async (field: keyof Customer) => {
+    const newDirection =
+      field === sortField && sortDirection === "asc" ? "desc" : "asc";
+    setSortField(field);
+    setSortDirection(newDirection);
+    const data = await fetchCustomers(1);
+    if (data.customers) {
+      setCustomers(data.customers);
+      setTotalPages(data.totalPages);
+      window.history.pushState(
+        {},
+        "",
+        `/dashboard/customers?page=1&query=${searchQuery}&status=${statusFilter}&sort=${field}&direction=${newDirection}`
+      );
+    }
+  };
 
-  // Pagination
-  const totalPages = Math.ceil(sortedCustomers.length / itemsPerPage);
-  const paginatedCustomers = sortedCustomers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Handle status filter change
+  const handleStatusFilterChange = async (
+    status: "all" | "active" | "inactive"
+  ) => {
+    try {
+      setIsLoading(true);
+      setStatusFilter(status);
 
+      const params = new URLSearchParams({
+        query: searchQuery,
+        page: "1",
+        status: status,
+        sort: sortField,
+        direction: sortDirection,
+      });
+
+      const response = await fetch(`/api/customers?${params.toString()}`);
+      if (!response.ok) throw new Error("Failed to fetch customers");
+      const data = await response.json();
+
+      if (data.customers) {
+        setCustomers(data.customers);
+        setTotalPages(data.totalPages);
+        window.history.pushState(
+          {},
+          "",
+          `/dashboard/customers?page=1&query=${searchQuery}&status=${status}&sort=${sortField}&direction=${sortDirection}`
+        );
+      }
+    } catch (error) {
+      console.error("Error updating status filter:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initial fetch
   useEffect(() => {
-    setIsLoading(false);
-  }, [customers]);
+    let isMounted = true;
+
+    const loadCustomers = async () => {
+      try {
+        setIsLoading(true);
+        const params = new URLSearchParams({
+          query: searchQuery,
+          page: currentPage.toString(),
+          status: statusFilter,
+          sort: sortField,
+          direction: sortDirection,
+        });
+
+        const response = await fetch(`/api/customers?${params.toString()}`);
+        if (!response.ok) throw new Error("Failed to fetch customers");
+        const data = await response.json();
+
+        if (isMounted && data.customers) {
+          setCustomers(data.customers);
+          setTotalPages(data.totalPages);
+        }
+      } catch (error) {
+        console.error("Error loading customers:", error);
+        if (isMounted) {
+          setCustomers([]);
+          setTotalPages(1);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadCustomers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPage, searchQuery, statusFilter, sortField, sortDirection]);
 
   if (isLoading) {
     return (
@@ -200,13 +294,13 @@ export default function CustomersTable({
               <div className="flex items-center gap-2">
                 <FunnelIcon className="h-5 w-5 text-gray-400" />
                 <select
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm appearance-none pr-8"
                   value={statusFilter}
                   onChange={(e) =>
-                    setStatusFilter(
+                    handleStatusFilterChange(
                       e.target.value as "all" | "active" | "inactive"
                     )
                   }
+                  className="rounded-md border border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
@@ -216,44 +310,39 @@ export default function CustomersTable({
             </div>
 
             <div className="md:hidden">
-              {paginatedCustomers.map((customer) => (
+              {customers.map((customer) => (
                 <div
                   key={customer.id}
                   className="mb-2 w-full rounded-md bg-white p-4"
                 >
                   <div className="flex items-center justify-between border-b pb-4">
-                    <div>
-                      <div className="mb-2 flex items-center">
-                        <Image
-                          src={customer.image_url}
-                          className="mr-2 rounded-full"
-                          width={28}
-                          height={28}
-                          alt={`${customer.name}'s profile picture`}
-                        />
-                        <p>{customer.name}</p>
-                      </div>
-                      <p className="text-sm text-gray-500">{customer.email}</p>
+                    <div className="flex items-center">
+                      <Image
+                        src={customer.image_url}
+                        className="mr-2 rounded-full"
+                        width={28}
+                        height={28}
+                        alt={`${customer.name}'s profile picture`}
+                      />
+                      <p>{customer.name}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                          customer.status === "active"
-                            ? "bg-green-50 text-green-700"
-                            : "bg-gray-50 text-gray-700"
-                        }`}
-                      >
-                        {customer.status}
-                      </span>
+                    <div className="text-sm text-gray-500">
+                      {customer.status}
                     </div>
                   </div>
                   <div className="flex w-full items-center justify-between pt-4">
                     <div className="flex justify-between gap-4">
+                      <p className="text-sm text-gray-500">{customer.email}</p>
                       <p className="text-sm text-gray-500">
-                        {customer.totalOrders} orders
+                        {customer.company}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">
+                        {formatCurrency(customer.totalSpent)}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {formatCurrency(customer.totalSpent)}
+                        {customer.totalOrders} orders
                       </p>
                     </div>
                   </div>
@@ -270,121 +359,67 @@ export default function CustomersTable({
                         <th
                           scope="col"
                           className="px-4 py-5 font-medium sm:pl-6 w-[25%] bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            setSortField("name");
-                            setSortDirection(
-                              sortDirection === "asc" ? "desc" : "asc"
-                            );
-                          }}
+                          onClick={() => handleSortChange("name")}
                         >
-                          <div className="flex items-center">
-                            Customer{" "}
-                            {sortField === "name" &&
-                              (sortDirection === "asc" ? "↑" : "↓")}
-                          </div>
+                          Customer{" "}
+                          {sortField === "name" &&
+                            (sortDirection === "asc" ? "↑" : "↓")}
                         </th>
                         <th
                           scope="col"
                           className="px-3 py-5 font-medium w-[20%] bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            setSortField("email");
-                            setSortDirection(
-                              sortDirection === "asc" ? "desc" : "asc"
-                            );
-                          }}
+                          onClick={() => handleSortChange("email")}
                         >
-                          <div className="flex items-center">
-                            Email{" "}
-                            {sortField === "email" &&
-                              (sortDirection === "asc" ? "↑" : "↓")}
-                          </div>
+                          Email{" "}
+                          {sortField === "email" &&
+                            (sortDirection === "asc" ? "↑" : "↓")}
                         </th>
                         <th
                           scope="col"
                           className="px-3 py-5 font-medium w-[15%] bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            setSortField("company");
-                            setSortDirection(
-                              sortDirection === "asc" ? "desc" : "asc"
-                            );
-                          }}
+                          onClick={() => handleSortChange("company")}
                         >
-                          <div className="flex items-center">
-                            Company{" "}
-                            {sortField === "company" &&
-                              (sortDirection === "asc" ? "↑" : "↓")}
-                          </div>
+                          Company{" "}
+                          {sortField === "company" &&
+                            (sortDirection === "asc" ? "↑" : "↓")}
                         </th>
                         <th
                           scope="col"
-                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            setSortField("status");
-                            setSortDirection(
-                              sortDirection === "asc" ? "desc" : "asc"
-                            );
-                          }}
+                          className="px-3 py-5 font-medium w-[10%] bg-gray-50"
                         >
                           Status
                         </th>
                         <th
                           scope="col"
-                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            setSortField("totalOrders");
-                            setSortDirection(
-                              sortDirection === "asc" ? "desc" : "asc"
-                            );
-                          }}
+                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 text-center cursor-pointer"
+                          onClick={() => handleSortChange("totalOrders")}
                         >
-                          <div className="flex items-center justify-center">
-                            Orders{" "}
-                            {sortField === "totalOrders" && (
-                              <span className="ml-1">
-                                {sortDirection === "asc" ? "↑" : "↓"}
-                              </span>
-                            )}
-                          </div>
+                          Orders{" "}
+                          {sortField === "totalOrders" &&
+                            (sortDirection === "asc" ? "↑" : "↓")}
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 text-right cursor-pointer"
+                          onClick={() => handleSortChange("totalSpent")}
+                        >
+                          Total Spent{" "}
+                          {sortField === "totalSpent" &&
+                            (sortDirection === "asc" ? "↑" : "↓")}
                         </th>
                         <th
                           scope="col"
                           className="px-3 py-5 font-medium w-[10%] bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            setSortField("totalSpent");
-                            setSortDirection(
-                              sortDirection === "asc" ? "desc" : "asc"
-                            );
-                          }}
+                          onClick={() => handleSortChange("lastOrderDate")}
                         >
-                          <div className="flex items-center justify-end">
-                            Total Spent{" "}
-                            {sortField === "totalSpent" && (
-                              <span className="ml-1">
-                                {sortDirection === "asc" ? "↑" : "↓"}
-                              </span>
-                            )}
-                          </div>
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            setSortField("lastOrderDate");
-                            setSortDirection(
-                              sortDirection === "asc" ? "desc" : "asc"
-                            );
-                          }}
-                        >
-                          <div className="flex items-center">
-                            Last Order{" "}
-                            {sortField === "lastOrderDate" &&
-                              (sortDirection === "asc" ? "↑" : "↓")}
-                          </div>
+                          Last Order{" "}
+                          {sortField === "lastOrderDate" &&
+                            (sortDirection === "asc" ? "↑" : "↓")}
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white">
-                      {paginatedCustomers.map((customer) => (
+                      {customers.map((customer) => (
                         <tr
                           key={customer.id}
                           className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
@@ -398,29 +433,14 @@ export default function CustomersTable({
                                 height={28}
                                 alt={`${customer.name}'s profile picture`}
                               />
-                              <p
-                                className="truncate max-w-[200px]"
-                                title={customer.name}
-                              >
-                                {customer.name}
-                              </p>
+                              <p>{customer.name}</p>
                             </div>
                           </td>
                           <td className="whitespace-nowrap px-3 py-3">
-                            <p
-                              className="truncate max-w-[180px]"
-                              title={customer.email}
-                            >
-                              {customer.email}
-                            </p>
+                            {customer.email}
                           </td>
                           <td className="whitespace-nowrap px-3 py-3">
-                            <p
-                              className="truncate max-w-[120px]"
-                              title={customer.company}
-                            >
-                              {customer.company}
-                            </p>
+                            {customer.company}
                           </td>
                           <td className="whitespace-nowrap px-3 py-3">
                             <span
@@ -434,10 +454,10 @@ export default function CustomersTable({
                             </span>
                           </td>
                           <td className="whitespace-nowrap px-3 py-3 text-center">
-                            {customer.totalOrders || 0}
+                            {customer.totalOrders}
                           </td>
                           <td className="whitespace-nowrap px-3 py-3 text-right">
-                            {formatCurrency(customer.totalSpent || 0)}
+                            {formatCurrency(customer.totalSpent)}
                           </td>
                           <td className="whitespace-nowrap px-3 py-3">
                             {customer.lastOrderDate
@@ -452,20 +472,16 @@ export default function CustomersTable({
                   </table>
                 </div>
               </div>
-              <div className="flex justify-center border-t border-gray-200 bg-white px-4 py-3">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={(page) => {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set("page", page.toString());
-                    window.location.href = url.toString();
-                  }}
-                />
-              </div>
             </div>
           </div>
         </div>
+      </div>
+      <div className="mt-5 flex w-full justify-center">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );
