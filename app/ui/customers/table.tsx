@@ -1,17 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { lusitana } from "@/app/ui/fonts";
-import Search from "@/app/ui/search";
-import {
-  // CustomersTableType,
-  FormattedCustomersTable,
-} from "@/app/lib/definitions";
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  FunnelIcon,
-} from "@heroicons/react/24/outline";
+
+import { FunnelIcon } from "@heroicons/react/24/outline";
 import { Customer } from "@/app/lib/definitions";
 import { formatCurrency } from "@/app/lib/utils";
 import { useState } from "react";

@@ -51,12 +51,6 @@ export function RevenueChartSkeleton() {
               <div className="h-4 w-12 animate-pulse rounded bg-gray-200" />
             </div>
           ))}
-          {/* X-axis horizontal bar */}
-          <div className="absolute left-0 bottom-0 h-3 w-full flex items-center">
-            <div className="h-3 w-3 rounded bg-gray-200" />
-            <div className="h-3 flex-1 bg-gray-200" />
-            <div className="h-3 w-3 rounded bg-gray-200" />
-          </div>
         </div>
       </div>
     </div>

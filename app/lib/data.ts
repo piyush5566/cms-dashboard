@@ -1,14 +1,7 @@
 import prisma from "@/app/lib/prisma";
-import {
-  CustomerField,
-  CustomersTableType,
-  InvoiceForm,
-  InvoicesTable,
-  LatestInvoiceRaw,
-  Revenue,
-  Customer,
-} from "./definitions";
-import { formatCurrency } from "./utils";
+import { Customer, InvoiceWithCustomer } from "@/app/lib/definitions";
+import { formatCurrency } from "@/app/lib/utils";
+import { Prisma } from "@/generated/prisma"; // Or from '@prisma/client' if @/generated/prisma doesn't export Prisma namespace
 
 export async function fetchRevenue() {
   try {
@@ -27,7 +20,7 @@ export async function fetchLatestInvoices() {
       take: 5,
       include: {
         customer: true,
-      },
+      }, // Cast to any to match the structure before mapping, or define a more precise intermediate type
     });
     const latestInvoices = data.map((invoice) => ({
       id: invoice.id,
@@ -82,27 +75,54 @@ export async function fetchFilteredInvoices(
   currentPage: number
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
-  // Attempt to parse query as a number for amount
   const amountQuery = Number(query);
-  const isValidAmount = !isNaN(amountQuery);
+  const isValidAmount = !Number.isNaN(amountQuery) && query.trim() !== "";
 
-  // Attempt to parse query as a date
   const dateQuery = new Date(query);
-  const isValidDate = !isNaN(dateQuery.getTime());
+  const isValidDate =
+    !Number.isNaN(dateQuery.getTime()) &&
+    query.trim() !== "" &&
+    /\d/.test(query);
+
+  const orConditions: Prisma.invoicesWhereInput[] = [];
+
+  if (query.trim() !== "") {
+    orConditions.push({
+      customer: {
+        name: {
+          contains: query,
+          mode: "insensitive",
+        },
+      },
+    });
+    orConditions.push({
+      customer: {
+        email: {
+          contains: query,
+          mode: "insensitive",
+        },
+      },
+    });
+    orConditions.push({
+      status: {
+        contains: query,
+        mode: "insensitive",
+      },
+    });
+  }
+
+  if (isValidAmount) {
+    orConditions.push({ amount: amountQuery });
+  }
+
+  if (isValidDate) {
+    orConditions.push({ date: dateQuery });
+  }
 
   try {
-    const invoices = await prisma.invoices.findMany({
+    const invoices = (await prisma.invoices.findMany({
       where: {
-        OR: [
-          { customer: { name: { contains: query, mode: "insensitive" } } },
-          { customer: { email: { contains: query, mode: "insensitive" } } },
-          { status: { contains: query, mode: "insensitive" } },
-          // Only include amount filter if query is a valid number
-          ...(isValidAmount ? [{ amount: { equals: amountQuery } }] : []),
-          // Only include date filter if query is a valid date
-          ...(isValidDate ? [{ date: { equals: dateQuery } }] : []),
-        ].filter(Boolean), // Filter out any undefined conditions that might arise
+        OR: orConditions.length > 0 ? orConditions : undefined,
       },
       include: {
         customer: true,
@@ -110,9 +130,14 @@ export async function fetchFilteredInvoices(
       orderBy: { date: "desc" },
       skip: offset,
       take: ITEMS_PER_PAGE,
-    });
+    })) as InvoiceWithCustomer[];
+
     return invoices.map((invoice) => ({
-      ...invoice,
+      id: invoice.id,
+      amount: invoice.amount,
+      date: invoice.date.toISOString(), // Ensure date is string if expected by consuming components
+      status: invoice.status,
+      customer_id: invoice.customer_id,
       name: invoice.customer.name,
       email: invoice.customer.email,
       image_url: invoice.customer.image_url,
@@ -125,25 +150,53 @@ export async function fetchFilteredInvoices(
 
 export async function fetchInvoicesPages(query: string) {
   try {
-    // Attempt to parse query as a number for amount
     const amountQuery = Number(query);
-    const isValidAmount = !isNaN(amountQuery);
+    const isValidAmount = !Number.isNaN(amountQuery) && query.trim() !== "";
 
-    // Attempt to parse query as a date
     const dateQuery = new Date(query);
-    const isValidDate = !isNaN(dateQuery.getTime());
+    const isValidDate =
+      !Number.isNaN(dateQuery.getTime()) &&
+      query.trim() !== "" &&
+      /\d/.test(query);
+
+    const orConditions: Prisma.invoicesWhereInput[] = [];
+
+    if (query.trim() !== "") {
+      orConditions.push({
+        customer: {
+          name: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+      });
+      orConditions.push({
+        customer: {
+          email: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+      });
+      orConditions.push({
+        status: {
+          contains: query,
+          mode: "insensitive",
+        },
+      });
+    }
+
+    if (isValidAmount) {
+      orConditions.push({ amount: amountQuery });
+    }
+
+    if (isValidDate) {
+      orConditions.push({ date: dateQuery });
+    }
 
     const count = await prisma.invoices.count({
       where: {
-        OR: [
-          { customer: { name: { contains: query, mode: "insensitive" } } },
-          { customer: { email: { contains: query, mode: "insensitive" } } },
-          { status: { contains: query, mode: "insensitive" } },
-          // Only include amount filter if query is a valid number
-          ...(isValidAmount ? [{ amount: { equals: amountQuery } }] : []),
-          // Only include date filter if query is a valid date
-          ...(isValidDate ? [{ date: { equals: dateQuery } }] : []),
-        ].filter(Boolean), // Filter out any undefined conditions
+        OR: orConditions.length > 0 ? orConditions : undefined,
       },
     });
     const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
@@ -208,7 +261,7 @@ export async function getCustomers(): Promise<Customer[]> {
     orderBy: { name: "asc" },
   });
 
-  return customers.map((customer) => ({
+  return customers.map((customer: any) => ({
     id: customer.id,
     name: customer.name,
     email: customer.email,

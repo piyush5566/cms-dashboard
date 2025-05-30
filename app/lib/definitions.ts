@@ -91,3 +91,16 @@ export type InvoiceForm = {
   amount: number;
   status: "pending" | "paid";
 };
+
+export type InvoiceWithCustomer = {
+  id: string;
+  status: "pending" | "paid";
+  customer_id: string;
+  amount: number;
+  date: Date;
+  customer: {
+    name: string;
+    email: string;
+    image_url: string;
+  };
+};
