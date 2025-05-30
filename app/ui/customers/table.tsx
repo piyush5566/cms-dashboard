@@ -5,7 +5,7 @@ import Image from "next/image";
 import { FunnelIcon } from "@heroicons/react/24/outline";
 import { Customer } from "@/app/lib/definitions";
 import { formatCurrency } from "@/app/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Pagination from "./pagination";
 
 export default function CustomersTable({
@@ -22,6 +22,7 @@ export default function CustomersTable({
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
   >("all");
+  const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 6;
 
   // Filter customers based on search term and status
@@ -59,21 +60,136 @@ export default function CustomersTable({
     currentPage * itemsPerPage
   );
 
-  const handleSort = (field: keyof Customer) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
+  useEffect(() => {
+    setIsLoading(false);
+  }, [customers]);
 
-  // Calculate summary statistics
-  const totalCustomers = customers.length;
-  const activeCustomers = customers.filter((c) => c.status === "active").length;
-  const totalRevenue = customers.reduce((sum, c) => sum + c.totalSpent, 0);
-  const averageOrderValue =
-    totalRevenue / customers.reduce((sum, c) => sum + c.totalOrders, 0);
+  if (isLoading) {
+    return (
+      <div className="w-full">
+        <div className="mt-6 flow-root">
+          <div className="inline-block min-w-full align-middle">
+            <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+              <div className="flex items-center justify-between gap-2 p-4">
+                <div className="flex items-center gap-2">
+                  <FunnelIcon className="h-5 w-5 text-gray-400" />
+                  <div className="h-8 w-32 rounded bg-gray-200" />
+                </div>
+              </div>
+
+              <div className="md:hidden">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="mb-2 w-full rounded-md bg-white p-4">
+                    <div className="flex items-center justify-between border-b pb-4">
+                      <div className="flex items-center">
+                        <div className="mr-2 h-8 w-8 rounded-full bg-gray-200" />
+                        <div className="h-4 w-24 rounded bg-gray-200" />
+                      </div>
+                      <div className="h-4 w-16 rounded bg-gray-200" />
+                    </div>
+                    <div className="flex w-full items-center justify-between pt-4">
+                      <div className="flex justify-between gap-4">
+                        <div className="h-4 w-16 rounded bg-gray-200" />
+                        <div className="h-4 w-24 rounded bg-gray-200" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden md:block">
+                <div className="relative h-[calc(100vh-22rem)]">
+                  <div className="absolute inset-0 overflow-auto">
+                    <table className="min-w-full text-gray-900">
+                      <thead className="sticky top-0 z-10">
+                        <tr className="bg-gray-50">
+                          <th
+                            scope="col"
+                            className="px-4 py-5 font-medium sm:pl-6 w-[25%] bg-gray-50"
+                          >
+                            Customer
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-3 py-5 font-medium w-[20%] bg-gray-50"
+                          >
+                            Email
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-3 py-5 font-medium w-[15%] bg-gray-50"
+                          >
+                            Company
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-3 py-5 font-medium w-[10%] bg-gray-50"
+                          >
+                            Status
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-3 py-5 font-medium w-[10%] bg-gray-50 text-center"
+                          >
+                            Orders
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-3 py-5 font-medium w-[10%] bg-gray-50 text-right"
+                          >
+                            Total Spent
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-3 py-5 font-medium w-[10%] bg-gray-50"
+                          >
+                            Last Order
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white">
+                        {[...Array(6)].map((_, i) => (
+                          <tr
+                            key={i}
+                            className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
+                          >
+                            <td className="whitespace-nowrap py-3 pl-6 pr-3">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-gray-200" />
+                                <div className="h-4 w-24 rounded bg-gray-200" />
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-3">
+                              <div className="h-4 w-32 rounded bg-gray-200" />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-3">
+                              <div className="h-4 w-24 rounded bg-gray-200" />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-3">
+                              <div className="h-4 w-16 rounded bg-gray-200" />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-3 text-center">
+                              <div className="h-4 w-8 rounded bg-gray-200" />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-3 text-right">
+                              <div className="h-4 w-20 rounded bg-gray-200" />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-3">
+                              <div className="h-4 w-24 rounded bg-gray-200" />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -153,45 +269,117 @@ export default function CustomersTable({
                       <tr className="bg-gray-50">
                         <th
                           scope="col"
-                          className="px-4 py-5 font-medium sm:pl-6 w-[25%] bg-gray-50"
+                          className="px-4 py-5 font-medium sm:pl-6 w-[25%] bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            setSortField("name");
+                            setSortDirection(
+                              sortDirection === "asc" ? "desc" : "asc"
+                            );
+                          }}
                         >
-                          Customer
+                          <div className="flex items-center">
+                            Customer{" "}
+                            {sortField === "name" &&
+                              (sortDirection === "asc" ? "↑" : "↓")}
+                          </div>
                         </th>
                         <th
                           scope="col"
-                          className="px-3 py-5 font-medium w-[20%] bg-gray-50"
+                          className="px-3 py-5 font-medium w-[20%] bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            setSortField("email");
+                            setSortDirection(
+                              sortDirection === "asc" ? "desc" : "asc"
+                            );
+                          }}
                         >
-                          Email
+                          <div className="flex items-center">
+                            Email{" "}
+                            {sortField === "email" &&
+                              (sortDirection === "asc" ? "↑" : "↓")}
+                          </div>
                         </th>
                         <th
                           scope="col"
-                          className="px-3 py-5 font-medium w-[15%] bg-gray-50"
+                          className="px-3 py-5 font-medium w-[15%] bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            setSortField("company");
+                            setSortDirection(
+                              sortDirection === "asc" ? "desc" : "asc"
+                            );
+                          }}
                         >
-                          Company
+                          <div className="flex items-center">
+                            Company{" "}
+                            {sortField === "company" &&
+                              (sortDirection === "asc" ? "↑" : "↓")}
+                          </div>
                         </th>
                         <th
                           scope="col"
-                          className="px-3 py-5 font-medium w-[10%] bg-gray-50"
+                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            setSortField("status");
+                            setSortDirection(
+                              sortDirection === "asc" ? "desc" : "asc"
+                            );
+                          }}
                         >
                           Status
                         </th>
                         <th
                           scope="col"
-                          className="px-3 py-5 font-medium w-[10%] bg-gray-50"
+                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            setSortField("totalOrders");
+                            setSortDirection(
+                              sortDirection === "asc" ? "desc" : "asc"
+                            );
+                          }}
                         >
-                          Orders
+                          <div className="flex items-center justify-center">
+                            Orders{" "}
+                            {sortField === "totalOrders" && (
+                              <span className="ml-1">
+                                {sortDirection === "asc" ? "↑" : "↓"}
+                              </span>
+                            )}
+                          </div>
                         </th>
                         <th
                           scope="col"
-                          className="px-3 py-5 font-medium w-[10%] bg-gray-50"
+                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            setSortField("totalSpent");
+                            setSortDirection(
+                              sortDirection === "asc" ? "desc" : "asc"
+                            );
+                          }}
                         >
-                          Total Spent
+                          <div className="flex items-center justify-end">
+                            Total Spent{" "}
+                            {sortField === "totalSpent" && (
+                              <span className="ml-1">
+                                {sortDirection === "asc" ? "↑" : "↓"}
+                              </span>
+                            )}
+                          </div>
                         </th>
                         <th
                           scope="col"
-                          className="px-3 py-5 font-medium w-[10%] bg-gray-50"
+                          className="px-3 py-5 font-medium w-[10%] bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            setSortField("lastOrderDate");
+                            setSortDirection(
+                              sortDirection === "asc" ? "desc" : "asc"
+                            );
+                          }}
                         >
-                          Last Order
+                          <div className="flex items-center">
+                            Last Order{" "}
+                            {sortField === "lastOrderDate" &&
+                              (sortDirection === "asc" ? "↑" : "↓")}
+                          </div>
                         </th>
                       </tr>
                     </thead>
@@ -245,10 +433,10 @@ export default function CustomersTable({
                               {customer.status}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-3">
+                          <td className="whitespace-nowrap px-3 py-3 text-center">
                             {customer.totalOrders || 0}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-3">
+                          <td className="whitespace-nowrap px-3 py-3 text-right">
                             {formatCurrency(customer.totalSpent || 0)}
                           </td>
                           <td className="whitespace-nowrap px-3 py-3">

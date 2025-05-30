@@ -261,7 +261,7 @@ export async function getCustomers(): Promise<Customer[]> {
     orderBy: { name: "asc" },
   });
 
-  return customers.map((customer: any) => ({
+  return customers.map((customer) => ({
     id: customer.id,
     name: customer.name,
     email: customer.email,
