@@ -7,6 +7,7 @@ import clsx from "clsx";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is logged in
@@ -18,11 +19,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("Auth check failed:", error);
         setIsLoggedIn(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkAuth();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col md:flex-row">
