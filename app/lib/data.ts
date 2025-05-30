@@ -1,5 +1,6 @@
 import prisma from "@/app/lib/prisma";
 import { Customer, InvoiceWithCustomer } from "@/app/lib/definitions";
+import type { InvoiceStatus } from "@/app/lib/definitions";
 import { formatCurrency } from "@/app/lib/utils";
 import { Prisma } from "@/generated/prisma"; // Or from '@prisma/client' if @/generated/prisma doesn't export Prisma namespace
 
@@ -43,11 +44,11 @@ export async function fetchCardData() {
         prisma.invoices.count(),
         prisma.customers.count(),
         prisma.invoices.aggregate({
-          where: { status: "paid" },
+          where: { status: "paid" as InvoiceStatus },
           _sum: { amount: true },
         }),
         prisma.invoices.aggregate({
-          where: { status: "pending" },
+          where: { status: "pending" as InvoiceStatus },
           _sum: { amount: true },
         }),
       ]);
@@ -135,8 +136,8 @@ export async function fetchFilteredInvoices(
     return invoices.map((invoice) => ({
       id: invoice.id,
       amount: invoice.amount,
-      date: invoice.date.toISOString(), // Ensure date is string if expected by consuming components
-      status: invoice.status,
+      date: invoice.date.toISOString(),
+      status: invoice.status as InvoiceStatus,
       customer_id: invoice.customer_id,
       name: invoice.customer.name,
       email: invoice.customer.email,
@@ -212,10 +213,16 @@ export async function fetchInvoiceById(id: string) {
     const invoice = await prisma.invoices.findUnique({
       where: { id },
     });
-    if (!invoice) return null;
+    if (!invoice) {
+      return null;
+    }
+    // The InvoiceForm type (used in app/dashboard/invoices/[id]/edit/page.tsx)
+    // expects status to be 'pending' | 'paid'.
+    // We cast the status from the database to this specific union type.
     return {
       ...invoice,
       amount: invoice.amount / 100,
+      status: invoice.status as "pending" | "paid",
     };
   } catch (error) {
     console.error("Database Error:", error);

@@ -1,3 +1,5 @@
+import type { InvoiceStatus } from "./definitions";
+
 // This file contains placeholder data that you'll be replacing with real data in the Data Fetching chapter:
 // https://nextjs.org/learn/dashboard-app/fetching-data
 const users = [
@@ -22,7 +24,7 @@ const customers = [
     lastOrderDate: "2024-03-15",
   },
   {
-    id: "3958dc9e-712f-4377-85e9-fec4b6a6442a",
+    id: "3958dc9e-787f-4377-85e9-fec4b6a6442a",
     name: "Delba de Oliveira",
     email: "delba@oliveira.com",
     image_url: "/customers/delba-de-oliveira.png",
@@ -31,6 +33,14 @@ const customers = [
     totalOrders: 8,
     totalSpent: 8000,
     lastOrderDate: "2024-03-10",
+    invoices: [
+      {
+        id: "3958dc9e-787f-4377-85e9-fec4b6a6442a",
+        amount: 15795,
+        status: "paid" as InvoiceStatus,
+        date: "2022-12-11",
+      },
+    ],
   },
   {
     id: "3958dc9e-742f-4377-85e9-fec4b6a6442a",
